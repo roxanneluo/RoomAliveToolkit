@@ -77,13 +77,29 @@ inline float2 Project_IR(float3 pos)
 	return float2(u,v);
 }
 
+#ifdef __DISPARITY_MAP__
+// get depth from scaled disparity map
+float _DisparityNumerator;
+float _DisparityOffset;
+inline float GetDepth(uint x, uint y)
+{
+	float4 c = tex2Dlod(_KinectDepthSource, float4(x / (_Width - 1), y / (_Height - 1), 0, 0));
+	float dispIntensity = c.r;
+	if (dispIntensity >= 1 - 1e-5)
+		return 0;
+	return _DisparityNumerator / (dispIntensity + _DisparityOffset);
+}
+#else
+
+// get depth from depth map
 //x and y is in pixels [0-511] and [0-423]
 inline float GetDepth(uint x, uint y)
 {
 	float4 c = tex2Dlod(_KinectDepthSource, float4(x/(_Width - 1), y/(_Height - 1), 0, 0));
 	
 	return c.r; // c.r+2.1 when depth has offset
-}	
+}
+#endif
 
 inline float3 Unproject_IR(float3 image)
 {
@@ -209,4 +225,57 @@ inline float3 ComputeFace(in float2 texCoord, out float3 posA, out float3 posB, 
 		posB = Unproject_IR(float3(xb, qy + by, depthB));
 
 		return pos;
+}
+
+/*************************************
+ * functions that I want to use within shader but will
+ * be shared by DepthMesh and DisparityMesh shaders
+ *************************************/
+struct appdata
+{
+	float4 vertex : POSITION; // vertex position
+	float2 uv : TEXCOORD0; // texture coordinate
+};
+
+struct v2f
+{
+	float2 uv : TEXCOORD0; // texture coordinate
+	float4 vertex : SV_POSITION; // clip space position
+};
+
+
+float _DepthCuttofThreshold;
+v2f vert(appdata inputV)
+{
+	//UNITY_INITIALIZE_OUTPUT(Input,o);
+
+	float3 posA = float3(0, 0, 0);
+	float3 posB = float3(0, 0, 0);
+	float2 uv = float2(0, 0);
+	float3 pos = ComputeFace(inputV.uv, posA, posB, uv);
+
+	// ***************************
+	float d = _DepthCuttofThreshold;//0.1;
+	if (length(posA - pos) > d || length(posB - pos) > d || length(posA - posB) > d)
+		pos = 0;
+
+	// ***************************
+	// Return values
+	// ***************************
+	v2f o;
+	float4 toMult = float4(pos.x, pos.y, pos.z, 1);
+	o.vertex = UnityObjectToClipPos(toMult);
+	o.uv = uv;
+	return o;
+}
+
+
+sampler2D _MainTex;
+// pixel shader; returns low precision ("fixed4" type)
+// color ("SV_Target" semantic)
+fixed4 frag(v2f i) : SV_Target
+{
+	// sample texture and return it
+	fixed4 col = tex2D(_MainTex, i.uv);
+	return col;
 }

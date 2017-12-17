@@ -61,7 +61,9 @@
      <None Include="Assets\DepthMesh\Shaders\DepthMesh.shader" />
      <None Include="Assets\RoomAliveToolkit\Shaders\ProjectionMappingDepthMeshMinimal.shader" />
      <None Include="Assets\RoomAliveToolkit\Shaders\DepthMeshSurfaceShader.shader" />
+     <None Include="Assets\DepthMesh\Shaders\DisparityMesh.shader" />
      <None Include="Assets\RoomAliveToolkit\Shaders\ReplacementColorDepthMeshSurfaceShader.shader" />
+     <None Include="Assets\DepthMesh\Data\calib.txt" />
      <None Include="Assets\RoomAliveToolkit_Examples\calibration3x3\ensemble.xml" />
  <Reference Include="UnityEditor.Advertisements">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/Advertisements/Editor/UnityEditor.Advertisements.dll</HintPath>

@@ -47,6 +47,8 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\DepthMesh\Scripts\DepthMeshCreator.cs" />
+     <Compile Include="Assets\DepthMesh\Scripts\DisparityMeshCreator.cs" />
+     <Compile Include="Assets\DepthMesh\Scripts\StereoCalibration.cs" />
      <Compile Include="Assets\RoomAliveToolkit\Scripts\Kinect\RATDepthMesh.cs" />
      <Compile Include="Assets\RoomAliveToolkit\Scripts\Kinect\RATKinectClient.cs" />
      <Compile Include="Assets\RoomAliveToolkit\Scripts\Kinect\RATKinectPlaybackController.cs" />
@@ -83,7 +85,9 @@
      <None Include="Assets\DepthMesh\Shaders\DepthMesh.shader" />
      <None Include="Assets\RoomAliveToolkit\Shaders\ProjectionMappingDepthMeshMinimal.shader" />
      <None Include="Assets\RoomAliveToolkit\Shaders\DepthMeshSurfaceShader.shader" />
+     <None Include="Assets\DepthMesh\Shaders\DisparityMesh.shader" />
      <None Include="Assets\RoomAliveToolkit\Shaders\ReplacementColorDepthMeshSurfaceShader.shader" />
+     <None Include="Assets\DepthMesh\Data\calib.txt" />
      <None Include="Assets\RoomAliveToolkit_Examples\calibration3x3\ensemble.xml" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>

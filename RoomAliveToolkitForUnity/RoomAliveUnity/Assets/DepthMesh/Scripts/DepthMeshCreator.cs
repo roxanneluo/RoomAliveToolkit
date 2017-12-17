@@ -9,8 +9,6 @@ namespace Telepresence {
         public Material surfaceMaterial;
         public Texture2D rgbTexture;
         public Texture2D depthTexture;
-        public bool receiveShadows = false;
-        public bool castShadows = false;
 
         // Unity cannot render one full mesh due to number of triangles limit, so this splits it into segments to be rendered separately. 
         // width of depth map patch to generate each submesh. I assume it's depthTexture.width
@@ -30,7 +28,7 @@ namespace Telepresence {
         private GameObject[] gameObjects;
 
         // Use this for initialization
-        void Start()
+        protected virtual void Start()
         {
             // Copy material. so that modification to the original material on disk
             // or in program won't affect each other. But note that each submesh shares
@@ -48,7 +46,7 @@ namespace Telepresence {
 
         // This should be changed if intrinsics of camera is changed. 
         // (At least it has to be changed when size of the image is changed)
-        private Matrix4x4 CreateIntrinsics()
+        virtual protected Matrix4x4 CreateIntrinsics()
         {
             Matrix4x4 mat = Matrix4x4.identity;
             mat[0, 0] = 366.58111130396549f;
@@ -59,7 +57,7 @@ namespace Telepresence {
             return mat;
         }
 
-        private void UpdateMaterials()
+        virtual protected void UpdateMaterials()
         {
             Matrix4x4 intrinsics = CreateIntrinsics();
 
