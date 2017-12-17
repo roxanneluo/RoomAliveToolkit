@@ -1,0 +1,1 @@
+To use the project, actually for images of different sizes, their intrinisics matrix needs to be reset and some depth map have offset in depth. So `CreateIntrinsics()` in `DepthMesh/Scripts/DepthMeshCreator.cs` and `GetDepth()` in `DepthMesh/Shaders/DepthMeshProcessing.cginc` need to be modified. 
