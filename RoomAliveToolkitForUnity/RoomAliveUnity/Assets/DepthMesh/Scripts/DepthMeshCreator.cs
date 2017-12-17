@@ -13,10 +13,14 @@ namespace Telepresence {
         public bool castShadows = false;
 
         // Unity cannot render one full mesh due to number of triangles limit, so this splits it into segments to be rendered separately. 
-        [RoomAliveToolkit.ReadOnly] public int depthWidth = 512;//640;
-        public int depthHeight = 8;//6;
+        // width of depth map patch to generate each submesh. I assume it's depthTexture.width
+        [RoomAliveToolkit.ReadOnly] public int depthWidth = 512;
+        // height of depth map patch to generate each submesh
+        public int depthHeight = 1;//6;
+        // number of depth map tiles in x direction to generate submesh
         [RoomAliveToolkit.ReadOnly] public int divTilesX = 1;
-        [RoomAliveToolkit.ReadOnly] public int divTilesY = 53;//80;
+        // number of depth map tiles in y direction to generate submesh
+        [RoomAliveToolkit.ReadOnly] public int divTilesY = 424;
         private int numTiles;
 
         private Mesh[] meshes;
@@ -28,7 +32,11 @@ namespace Telepresence {
         // Use this for initialization
         void Start()
         {
+            // Copy material. so that modification to the original material on disk
+            // or in program won't affect each other. But note that each submesh shares
+            // the same material. So changes to it would affect all submeshes.
             surfaceMaterial = new Material(surfaceMaterial);
+
             UpdateMaterials();
             CreateResources();
         }
@@ -38,6 +46,8 @@ namespace Telepresence {
             UpdateMaterials();
         }
 
+        // This should be changed if intrinsics of camera is changed. 
+        // (At least it has to be changed when size of the image is changed)
         private Matrix4x4 CreateIntrinsics()
         {
             Matrix4x4 mat = Matrix4x4.identity;
@@ -69,6 +79,11 @@ namespace Telepresence {
             //surfaceMaterial.SetTexture("_DepthToCameraSpaceY", depthToCameraSpaceY);
         }
 
+        // Set divTilesX, divTilesY, and depthWidth based on depthTexture.width and depthHeight
+        // I need to ensure that divTilesY * depthHeight == depthTexture.height and return false
+        // if this is not satisfied. Here, I'm being lazy and just set depthHeight = 1 so that this
+        // is guaranteed to be true. Actually, I observed it's faster when depthHeight is smaller 
+        //since it reduces the time to generate the shared dummy submesh.
         private bool setTileParameters()
         {
             depthWidth = depthTexture.width;
@@ -89,7 +104,7 @@ namespace Telepresence {
             {
 
                 /*{
-                    // debug
+                    // debug: create a rough representation of the image plane.
                     int id = i / 6;
                     int r = id / (depthWidth - 1), c = id % (depthWidth - 1);
                     int q = i % 6;
