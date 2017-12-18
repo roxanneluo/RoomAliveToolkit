@@ -27,6 +27,11 @@ namespace Telepresence {
 
         private GameObject[] gameObjects;
 
+        // needs to be far but within the camera frustum (closer than far plane)
+        // I guess unity does some optimization such that the shader is not called
+        // if the mesh is outside the frustum
+        private static float dummyZ = 100; 
+
         // Use this for initialization
         protected virtual void Start()
         {
@@ -116,7 +121,7 @@ namespace Telepresence {
                     verts[i] = new Vector3((c + xx) * dx, (r + yy) * dy, 0f);
                 }*/
 
-                verts[i] = new Vector3(0f, 0f, 0.0f);
+                verts[i] = new Vector3(0f, 0f, dummyZ);
             }
 
             var indices = new int[numPoints];
