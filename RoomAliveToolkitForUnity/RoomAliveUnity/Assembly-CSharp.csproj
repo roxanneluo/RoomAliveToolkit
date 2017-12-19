@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\DepthMesh\Scripts\DepthMeshCreator.cs" />
+     <Compile Include="Assets\DepthMesh\Scripts\DepthMeshCreatorNoGeometryShader.cs" />
      <Compile Include="Assets\DepthMesh\Scripts\DisparityMeshCreator.cs" />
      <Compile Include="Assets\DepthMesh\Scripts\StereoCalibration.cs" />
      <Compile Include="Assets\RoomAliveToolkit\Scripts\Kinect\RATDepthMesh.cs" />
@@ -76,6 +77,7 @@
      <Compile Include="Assets\RoomAliveToolkit\Scripts\Utilities\UnmanagedImage.cs" />
      <Compile Include="Assets\RoomAliveToolkit\Scripts\Utilities\Win32.cs" />
      <None Include="Assets\RoomAliveToolkit\Shaders\ReplacementColorUnlitShader.shader" />
+     <None Include="Assets\DepthMesh\Shaders\DepthMeshProcessingNoGeometryShader.cginc" />
      <None Include="Assets\RoomAliveToolkit\Shaders\ProjectionMappingMinimal.shader" />
      <None Include="Assets\RoomAliveToolkit_Examples\calibration1x1\officeTest.xml" />
      <None Include="Assets\ResourcesOfficeTest\officeTest.xml" />
