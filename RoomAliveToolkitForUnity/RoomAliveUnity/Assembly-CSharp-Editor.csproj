@@ -57,6 +57,7 @@
      <Compile Include="Assets\RoomAliveToolkit\Scripts\Editor\RATProjectionPassEditor.cs" />
      <Compile Include="Assets\RoomAliveToolkit\Scripts\Editor\RATSceneSetupEditor.cs" />
      <None Include="Assets\RoomAliveToolkit\Shaders\ReplacementColorUnlitShader.shader" />
+     <None Include="Assets\DepthMesh\Shaders\DepthMeshProcessingNoGeometryShader.cginc" />
      <None Include="Assets\RoomAliveToolkit\Shaders\ProjectionMappingMinimal.shader" />
      <None Include="Assets\RoomAliveToolkit_Examples\calibration1x1\officeTest.xml" />
      <None Include="Assets\ResourcesOfficeTest\officeTest.xml" />

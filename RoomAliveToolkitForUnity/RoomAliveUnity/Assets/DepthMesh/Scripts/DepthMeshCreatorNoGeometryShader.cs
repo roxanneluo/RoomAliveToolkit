@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Telepresence {
     [AddComponentMenu("Telepresence/DepthMeshCreator")]
-    public class DepthMeshCreator : MonoBehaviour
+    public class DepthMeshCreatorNoGeometryShader : MonoBehaviour
     {
         public Material surfaceMaterial;
         public Texture2D rgbTexture;
@@ -12,12 +12,9 @@ namespace Telepresence {
 
         // Unity cannot render one full mesh due to number of triangles limit, so this splits it into segments to be rendered separately. 
         // width of depth map patch to generate each submesh. I assume it's depthTexture.width
-        // depth Width and depthHeight are the width and height of the submesh
-        // But note that to avoid holes, the last line in the submesh is the starting line of the next submesh. 
-        // So the next submesh should start at line i*(depthHeight-1)
         [RoomAliveToolkit.ReadOnly] public int depthWidth = 512;
         // height of depth map patch to generate each submesh
-        public int depthHeight = 2;
+        public int depthHeight = 1;//6;
         // number of depth map tiles in x direction to generate submesh
         [RoomAliveToolkit.ReadOnly] public int divTilesX = 1;
         // number of depth map tiles in y direction to generate submesh
@@ -30,7 +27,10 @@ namespace Telepresence {
 
         private GameObject[] gameObjects;
 
-        protected static float dummyZ = 100f;
+        // needs to be far but within the camera frustum (closer than far plane)
+        // I guess unity does some optimization such that the shader is not called
+        // if the mesh is outside the frustum
+        private static float dummyZ = 100; 
 
         // Use this for initialization
         protected virtual void Start()
@@ -91,47 +91,42 @@ namespace Telepresence {
         {
             depthWidth = depthTexture.width;
             divTilesX = 1;
-            divTilesY = (int)Mathf.Ceil(depthTexture.height-1 / (float)(depthHeight-1));
+            divTilesY = (int)Mathf.Ceil(depthTexture.height / (float)depthHeight);
             return true;
-        }
-
-        private int indexFromPixel(Vector2 pixelPos)
-        {
-            return (int) (pixelPos.y * depthWidth + pixelPos.x);
         }
 
         private void CreateResources()
         {
             if (!setTileParameters()) return;
 
-            int numPoints = depthWidth * depthHeight;
+            int numPoints = (depthWidth - 1) * (depthHeight) * 6;
 
             numTiles = divTilesX * divTilesY;
             var verts = new Vector3[numPoints];
             for (var i = 0; i < numPoints; ++i)
             {
+
+                /*{
+                    // debug: create a rough representation of the image plane.
+                    int id = i / 6;
+                    int r = id / (depthWidth - 1), c = id % (depthWidth - 1);
+                    int q = i % 6;
+                    float dx = 0.01f, dy = 0.1f;
+                    float xx = 0, yy = 0;
+                    switch (q)
+                    {
+                        case 1: yy = 1; break;
+                        case 2: xx = 1; break;
+                    }
+                    verts[i] = new Vector3((c + xx) * dx, (r + yy) * dy, 0f);
+                }*/
+
                 verts[i] = new Vector3(0f, 0f, dummyZ);
             }
 
-            var indices = new int[6 * (depthWidth-1) * (depthHeight-1)];
-            for (int i = 0, triStart = 0; i < depthHeight-1; ++i)
-            {
-                for (int j = 0; j < depthWidth-1; ++j)
-                {   
-                    // quad starting at (j,i) consists of 2 triangles
-                    int[] signs = { 1, -1 };
-                    Vector2[] startOffsets = { Vector2.zero, Vector2.one };
-                    for (int tri = 0; tri < startOffsets.Length; ++tri)
-                    {
-                        // for each triangle
-                        Vector2 cur = new Vector2(j, i) + startOffsets[tri];
-                        indices[triStart++] = indexFromPixel(cur);
-                        Vector2[] triOffsets = { Vector2.right, Vector2.up };
-                        for (int p = 0; p < triOffsets.Length; ++p)
-                            indices[triStart++] = indexFromPixel(cur + signs[tri] * triOffsets[p]);
-                    }
-                }
-            }
+            var indices = new int[numPoints];
+            for (var i = 0; i < numPoints; ++i)
+                indices[i] = i;
 
             var texCoords = new Vector2[numPoints];
             for (var i = 0; i < numPoints; ++i)

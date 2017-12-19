@@ -127,17 +127,103 @@ inline float3 CameraToWorld(float3 pos)
 	return float3(x, y, z);
 }
 
-inline float3 ComputeFace(in float2 texCoord, out float2 uv)
+inline float3 ComputeFace(in float2 texCoord, out float3 posA, out float3 posB, out float2 uv)
 {
 		uint tile = (uint) texCoord.y;
 		uint id = (uint) texCoord.x;
-		id = id + (_Width * (_TileHeight-1)) * tile;
+		uint tileWidth = _Width - 1;
+		uint pointsPerQuad = 6;
+		id = id + ((tileWidth) * _TileHeight * pointsPerQuad) * tile;
+		  	
+		// each quad is 6 vertices
+		uint q = id / pointsPerQuad;
 		
-		uint x = id % _Width;
-		uint y = id / _Width;
+		// position of quad
+		uint qx = q % (tileWidth);
+		uint qy = q / (tileWidth);
+		
+		// vertex in quad
+		uint v = id % pointsPerQuad;
+		
+		// position of vertex in quad
+		uint vx, vy;
+		
+		// position of other vertices on the triangle, used for computing normals and 
+		// testing that all depth values in the triangle are valid
+		// assign a and b according to right hand rule, so that a x b gives us our normal
+		uint ax, ay, bx, by;
+
+		if(v == 0)
+		{
+			vx = 0; vy = 0;
+		
+			ax = 1; ay = 0; // 1
+			bx = 0; by = 1; // 2
+		}
+			
+		if(v == 1)
+		{
+			vx = 1; vy = 0;
+		
+			ax = 0; ay = 1; // 2
+			bx = 0; by = 0; // 0
+		}
+			
+		if(v == 2)
+		{
+			vx = 0; vy = 1;
+		
+			ax = 0; ay = 0; // 0
+			bx = 1; by = 0; // 1
+		}
+
+		if(v == 3)
+		{
+			vx = 1; vy = 1;
+		
+			ax = 0; ay = 1; // 4
+			bx = 1; by = 0; // 5
+		} 
+			
+		if(v == 4)
+		{ 
+			vx = 0; vy = 1;
+		
+			ax = 1; ay = 0; // 5
+			bx = 1; by = 1; // 3
+		}
+			
+		if(v == 5)
+		{
+			vx = 1; vy = 0;
+		
+			ax = 1; ay = 1; // 3
+			bx = 0; by = 1; // 4
+		}
+			
+		//flip x because the depth images and the depthToCameraTable are flipped horizontally
+		/*
+		float x = tileWidth - (qx + vx);
+		float xa = tileWidth - (qx + ax);
+		float xb = tileWidth - (qx + bx);
+		*/
+
+		//if the depth images are not flipped
+		float x = qx + vx;
+		float y = qy + vy;
+		float xa = qx + ax;
+		float xb = qx + bx;
+
 		float depth = GetDepth(x, y);
 		float3 pos = Unproject_IR(float3(x, y, depth));
 		uv = float2(x / _Width, y / _Height);
+
+		float depthA = GetDepth( xa, qy + ay );
+		posA = Unproject_IR(float3(xa, qy + ay, depthA));
+
+		float depthB = GetDepth( xb, qy + by );
+		posB = Unproject_IR(float3(xb, qy + by, depthB));
+
 		return pos;
 }
 
@@ -158,11 +244,20 @@ struct v2f
 };
 
 
+float _DepthCuttofThreshold;
 v2f vert(appdata inputV)
 {
 	//UNITY_INITIALIZE_OUTPUT(Input,o);
+
+	float3 posA = float3(0, 0, 0);
+	float3 posB = float3(0, 0, 0);
 	float2 uv = float2(0, 0);
-	float3 pos = ComputeFace(inputV.uv, uv);
+	float3 pos = ComputeFace(inputV.uv, posA, posB, uv);
+
+	// ***************************
+	float d = _DepthCuttofThreshold;//0.1;
+	if (length(posA - pos) > d || length(posB - pos) > d || length(posA - posB) > d)
+		pos = 0;
 
 	// ***************************
 	// Return values
@@ -183,18 +278,4 @@ fixed4 frag(v2f i) : SV_Target
 	// sample texture and return it
 	fixed4 col = tex2D(_MainTex, i.uv);
 	return col;
-}
-
-
-float _DepthCuttofThreshold;
-[maxvertexcount(3)]
-void geom(triangle v2f input[3], inout TriangleStream<v2f> OutputStream)
-{
-	float d = _DepthCuttofThreshold;//0.1;
-	if (length(input[0].vertex - input[1].vertex) > d ||
-		length(input[0].vertex - input[2].vertex) > d ||
-		length(input[1].vertex - input[2].vertex) > d)
-		return;
-	for (int i = 0; i < 3; ++i)
-		OutputStream.Append(input[i]);
 }

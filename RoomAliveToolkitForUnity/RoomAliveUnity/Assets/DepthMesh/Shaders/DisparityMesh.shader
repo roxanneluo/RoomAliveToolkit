@@ -25,14 +25,22 @@ Shader "Telepresence/DisparityMeshShader(Unlit)" {
 			Cull Front
 			ZTest On
 			CGPROGRAM
+
+			#define __DISPARITY_MAP__
+
 			#pragma vertex vert
 			#pragma fragment frag
 
-
-			#define __DISPARITY_MAP__
+			// It's more efficient using geometry shader
+			#pragma geometry geom
 			//all other relevant variables are included in DepthMeshProcessing.cginc 
 			#include "Assets/DepthMesh/Shaders/DepthMeshProcessing.cginc"
 			
+			/*
+			 * Since geometry shader doesn't work with surface shader, I saved this option here,
+			 * see https://forum.unity.com/threads/geometry-shader-examples-for-opengl.372919/
+			#include "Assets/DepthMesh/Shaders/DepthMeshProcessingNoGeometryShader.cginc"
+			*/
 
 			ENDCG
 		}
